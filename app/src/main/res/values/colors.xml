@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Background -->
+    <color name="background_primary">#FF0D1117</color>
+    <color name="background_card">#FF161B22</color>
+    <color name="background_elevated">#FF21262D</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#FFF0F6FC</color>
+    <color name="text_secondary">#FF8B949E</color>
+    <color name="text_tertiary">#FF6E7681</color>
+
+    <!-- Status colors -->
+    <color name="status_online">#FF3FB950</color>
+    <color name="status_offline">#FFF85149</color>
+    <color name="status_no_connection">#FF6E7681</color>
+
+    <!-- Accent -->
+    <color name="accent">#FF58A6FF</color>
+    <color name="divider">#FF30363D</color>
+
+    <!-- Theme colors -->
+    <color name="colorPrimary">#FF58A6FF</color>
+    <color name="colorPrimaryVariant">#FF388BFD</color>
+    <color name="colorOnPrimary">#FF0D1117</color>
+    <color name="colorSecondary">#FF3FB950</color>
+    <color name="colorSecondaryVariant">#FF238636</color>
+    <color name="colorOnSecondary">#FF0D1117</color>
+    <color name="colorSurface">#FF161B22</color>
+    <color name="colorOnSurface">#FFF0F6FC</color>
+    <color name="colorError">#FFF85149</color>
+    <color name="colorOnError">#FF0D1117</color>
+</resources>
