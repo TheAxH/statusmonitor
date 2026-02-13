@@ -20,6 +20,24 @@ public class PingCheck implements StatusCheckStrategy {
 
     @Override
     public Result check(MonitorEntity entity) {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return Result.noConnection(e.getMessage());
+                }
+            }
+            Result r = runPing();
+            if (r != null) {
+                return r;
+            }
+        }
+        return Result.offline("No response");
+    }
+
+    private Result runPing() {
         try {
             ProcessBuilder pb = new ProcessBuilder("ping", "-c", "1", "-W", "5", host);
             pb.redirectErrorStream(true);
@@ -29,7 +47,7 @@ public class PingCheck implements StatusCheckStrategy {
             String line;
             String latency = null;
             String errorMsg = null;
-            
+
             while ((line = reader.readLine()) != null) {
                 if (line.contains("time=")) {
                     int start = line.indexOf("time=") + 5;
@@ -44,15 +62,14 @@ public class PingCheck implements StatusCheckStrategy {
             }
 
             int exitCode = process.waitFor();
-            
+
             if (exitCode == 0 && latency != null) {
                 return Result.online(latency);
-            } else if (errorMsg != null) {
-                return Result.noConnection(errorMsg);
-            } else {
-                return Result.offline("No response");
             }
-
+            if (errorMsg != null) {
+                return Result.noConnection(errorMsg);
+            }
+            return null;
         } catch (Exception e) {
             return Result.noConnection(e.getMessage());
         }

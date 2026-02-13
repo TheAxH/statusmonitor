@@ -1,5 +1,7 @@
 package com.example.statusmonitor;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,6 +23,8 @@ public class StatusAdapter extends RecyclerView.Adapter<StatusAdapter.ViewHolder
 
     private static final String PAYLOAD_STATUS = "status";
     private static final String PAYLOAD_TIMER = "timer";
+    private static final String PREFS_NAME = "status_monitor_prefs";
+    private static final String PREF_NOTIFY_PREFIX = "notify_";
 
     private final List<MonitorEntity> entities;
     private final Handler timerHandler;
@@ -119,10 +123,18 @@ public class StatusAdapter extends RecyclerView.Adapter<StatusAdapter.ViewHolder
             addressText.setText(entity.getAddress() != null ? entity.getAddress() : "");
             checkTypeText.setText(entity.getCheckStrategy().getDescription());
 
+            SharedPreferences prefs = itemView.getContext().getApplicationContext()
+                    .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String key = PREF_NOTIFY_PREFIX + entity.getId();
+            boolean notify = prefs.getBoolean(key, true);
+            entity.setNotificationsEnabled(notify);
+
             notificationSwitch.setOnCheckedChangeListener(null);
-            notificationSwitch.setChecked(entity.isNotificationsEnabled());
-            notificationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                    entity.setNotificationsEnabled(isChecked));
+            notificationSwitch.setChecked(notify);
+            notificationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                entity.setNotificationsEnabled(isChecked);
+                prefs.edit().putBoolean(key, isChecked).commit();
+            });
 
             updateStatus(entity);
             updateTimer(entity);

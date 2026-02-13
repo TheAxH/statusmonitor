@@ -7,6 +7,7 @@ import android.os.Build;
 
 /**
  * Receives boot completed broadcast to auto-start the monitoring service.
+ * Uses foregroundServiceType=specialUse so start from BOOT_COMPLETED is allowed (Android 14+).
  */
 public class BootReceiver extends BroadcastReceiver {
 

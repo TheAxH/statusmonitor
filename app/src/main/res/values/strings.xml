@@ -4,4 +4,5 @@
     <string name="app_title">Status Monitor</string>
     <string name="app_subtitle">Monitoring %d entities</string>
     <string name="refresh">Refresh</string>
+    <string name="fgs_special_use_description">Background monitoring of network host availability (ping). Runs after device boot to keep status checks active until the user opens the app.</string>
 </resources>

@@ -42,7 +42,7 @@ public class MonitorConfig {
             // pve1 - HTTP health check
             monitors.add(new MonitorEntity.Builder("pve1", "pve1")
                     .address(lab22PublicIP)
-                    .checkStrategy(new SimpleHealthCheck(9996, lab22PublicIP))
+                    .checkStrategy(new SimpleHealthCheck(9994, lab22PublicIP))
                     .build());
 
             // pve2 - HTTP health check
@@ -51,10 +51,23 @@ public class MonitorConfig {
                     .checkStrategy(new SimpleHealthCheck(9998, lab22PublicIP))
                     .build());
 
+            // pve3 - HTTP health check
+            monitors.add(new MonitorEntity.Builder("pve3", "pve3")
+                    .address(lab22PublicIP)
+                    .checkStrategy(new SimpleHealthCheck(9995, lab22PublicIP))
+                    .build());
+
+
             // kaskasapakte - HTTP health check
             monitors.add(new MonitorEntity.Builder("kaskasapakte", "kaskasapakte")
                     .address(lab22PublicIP)
                     .checkStrategy(new SimpleHealthCheck(9997, lab22PublicIP))
+                    .build());
+
+            // tolpagorni - HTTP health check
+            monitors.add(new MonitorEntity.Builder("tolpagorni", "tolpagorni")
+                    .address(lab22PublicIP)
+                    .checkStrategy(new SimpleHealthCheck(9996, lab22PublicIP))
                     .build());
 
             // Minecraft server
