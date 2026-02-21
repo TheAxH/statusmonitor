@@ -110,7 +110,6 @@ public class MonitorService extends Service {
     private void performChecks() {
         for (MonitorEntity entity : entities) {
             statusChecker.checkStatus(entity, (checkedEntity, result) -> {
-                MonitorEntity.Status previousStatus = checkedEntity.getStatus();
                 checkedEntity.setStatus(result.status);
                 checkedEntity.setMessage(result.message);
                 checkedEntity.setUptime(result.uptime);
@@ -120,7 +119,7 @@ public class MonitorService extends Service {
                     listener.onStatusUpdated(checkedEntity);
                 }
 
-                if (checkedEntity.shouldNotify()) {
+                if (checkedEntity.isNotificationsEnabled() && result.status == MonitorEntity.Status.OFFLINE) {
                     notificationHelper.notifyStatusChange(checkedEntity);
                 }
             });
