@@ -46,7 +46,7 @@ public class MonitorService extends Service {
     public void onCreate() {
         super.onCreate();
         handler = new Handler(Looper.getMainLooper());
-        statusChecker = new StatusChecker();
+        statusChecker = new StatusChecker(this);
         notificationHelper = new NotificationHelper(this);
         entities = MonitorConfig.getMonitors();
         createNotificationChannel();
@@ -121,13 +121,6 @@ public class MonitorService extends Service {
                 }
 
                 if (checkedEntity.shouldNotify()) {
-                    notificationHelper.notifyStatusChange(checkedEntity);
-                }
-                // Notify when coming back online
-                else if (checkedEntity.isNotificationsEnabled() &&
-                        previousStatus != null &&
-                        previousStatus != MonitorEntity.Status.ONLINE &&
-                        result.status == MonitorEntity.Status.ONLINE) {
                     notificationHelper.notifyStatusChange(checkedEntity);
                 }
             });

@@ -40,28 +40,12 @@ public class NotificationHelper {
         }
     }
 
+    /** Notify only when the service is actually offline (not for NO_CONNECTION or back online). */
     public void notifyStatusChange(MonitorEntity entity) {
-        if (!entity.isNotificationsEnabled()) return;
+        if (!entity.isNotificationsEnabled() || entity.getStatus() != MonitorEntity.Status.OFFLINE) return;
 
-        String title;
-        String message;
-
-        switch (entity.getStatus()) {
-            case OFFLINE:
-                title = entity.getName() + " OFFLINE";
-                message = entity.getMessage();
-                break;
-            case NO_CONNECTION:
-                title = entity.getName() + " NO CONNECTION";
-                message = entity.getMessage();
-                break;
-            case ONLINE:
-                title = entity.getName() + " back ONLINE";
-                message = entity.getMessage();
-                break;
-            default:
-                return;
-        }
+        String title = entity.getName() + " OFFLINE";
+        String message = entity.getMessage();
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

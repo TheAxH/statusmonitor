@@ -77,13 +77,11 @@ public class MinecraftCheck implements StatusCheckStrategy {
             return Result.noConnection("No DNS");
         } catch (java.net.SocketTimeoutException e) {
             return Result.offline("Timeout");
+        } catch (java.net.NoRouteToHostException e) {
+            return Result.noConnection("No route");
         } catch (java.net.ConnectException e) {
             return Result.offline("Connection refused");
         } catch (Exception e) {
-            String msg = e.getMessage();
-            if (msg != null && msg.contains("Network is unreachable")) {
-                return Result.noConnection("No network");
-            }
             return Result.offline(e.getClass().getSimpleName());
         }
     }

@@ -56,9 +56,10 @@ public class MonitorEntity {
     public void setNotificationsEnabled(boolean enabled) { this.notificationsEnabled = enabled; }
     public void setLastCheckTime(long time) { this.lastCheckTime = time; }
 
+    /** True only when status changed to OFFLINE (service down). No notify for NO_CONNECTION or back online. */
     public boolean shouldNotify() {
         if (!notificationsEnabled || previousStatus == null || previousStatus == status) return false;
-        return status == Status.OFFLINE || status == Status.NO_CONNECTION;
+        return status == Status.OFFLINE;
     }
 
     public static class Builder {
