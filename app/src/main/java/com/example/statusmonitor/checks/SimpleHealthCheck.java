@@ -95,7 +95,7 @@ systemctl status health-server
 */
 public class SimpleHealthCheck implements StatusCheckStrategy {
 
-    private static final int TIMEOUT_MS = 5000;
+    private static final int TIMEOUT_MS = 15000;
 
     private final int port;
     private final String host;
@@ -107,39 +107,42 @@ public class SimpleHealthCheck implements StatusCheckStrategy {
 
     @Override
     public Result check(MonitorEntity entity) {
-        HttpURLConnection conn = null;
-        try {
-            String url = "http://" + host + ":" + port + "/health";
-            conn = (HttpURLConnection) new URL(url).openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(TIMEOUT_MS);
-            conn.setReadTimeout(TIMEOUT_MS);
+        for (int attempt = 0; attempt < 2; attempt++) {
+            HttpURLConnection conn = null;
+            try {
+                String url = "http://" + host + ":" + port + "/health";
+                conn = (HttpURLConnection) new URL(url).openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(TIMEOUT_MS);
+                conn.setReadTimeout(TIMEOUT_MS);
 
-            int code = conn.getResponseCode();
-            
-            if (code >= 200 && code < 300) {
-                String body = readBody(conn);
-                String name = extractJson(body, "name");
-                String uptime = extractJson(body, "uptime");
-                String message = name != null ? name : "OK";
-                return Result.online(message, uptime);
-            } else {
-                return Result.offline("HTTP " + code);
+                int code = conn.getResponseCode();
+
+                if (code >= 200 && code < 300) {
+                    String body = readBody(conn);
+                    String name = extractJson(body, "name");
+                    String uptime = extractJson(body, "uptime");
+                    String message = name != null ? name : "OK";
+                    return Result.online(message, uptime);
+                } else {
+                    return Result.offline("HTTP " + code);
+                }
+
+            } catch (java.net.UnknownHostException e) {
+                return Result.noConnection("No DNS");
+            } catch (java.net.SocketTimeoutException e) {
+                if (attempt == 1) return Result.offline("Timeout");
+            } catch (java.net.NoRouteToHostException e) {
+                return Result.noConnection("No route");
+            } catch (java.net.ConnectException e) {
+                return Result.offline("Connection refused");
+            } catch (Exception e) {
+                return Result.offline(e.getClass().getSimpleName());
+            } finally {
+                if (conn != null) conn.disconnect();
             }
-
-        } catch (java.net.UnknownHostException e) {
-            return Result.noConnection("No DNS");
-        } catch (java.net.SocketTimeoutException e) {
-            return Result.offline("Timeout");
-        } catch (java.net.NoRouteToHostException e) {
-            return Result.noConnection("No route");
-        } catch (java.net.ConnectException e) {
-            return Result.offline("Connection refused");
-        } catch (Exception e) {
-            return Result.offline(e.getClass().getSimpleName());
-        } finally {
-            if (conn != null) conn.disconnect();
         }
+        return Result.offline("Timeout");
     }
 
     @Override

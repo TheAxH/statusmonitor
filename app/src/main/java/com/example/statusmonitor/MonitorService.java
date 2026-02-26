@@ -22,7 +22,7 @@ public class MonitorService extends Service {
 
     private static final String CHANNEL_ID = "monitor_service";
     private static final int NOTIFICATION_ID = 1;
-    private static final long CHECK_INTERVAL_MS = 10_000;
+    private static final long CHECK_INTERVAL_MS = 20_000;
 
     private final IBinder binder = new LocalBinder();
     private Handler handler;

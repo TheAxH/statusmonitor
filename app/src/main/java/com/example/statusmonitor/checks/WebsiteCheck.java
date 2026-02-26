@@ -18,7 +18,7 @@ Usage:
 */
 public class WebsiteCheck implements StatusCheckStrategy {
 
-    private static final int TIMEOUT_MS = 10000;
+    private static final int TIMEOUT_MS = 15000;
 
     private final String url;
     private final String expectedContent;
@@ -30,47 +30,50 @@ public class WebsiteCheck implements StatusCheckStrategy {
 
     @Override
     public Result check(MonitorEntity entity) {
-        HttpURLConnection conn = null;
-        try {
-            URL urlObj = new URL(url);
-            conn = (HttpURLConnection) urlObj.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(TIMEOUT_MS);
-            conn.setReadTimeout(TIMEOUT_MS);
-            conn.setRequestProperty("User-Agent", "StatusMonitor/1.0");
-            conn.setInstanceFollowRedirects(true);
+        for (int attempt = 0; attempt < 2; attempt++) {
+            HttpURLConnection conn = null;
+            try {
+                URL urlObj = new URL(url);
+                conn = (HttpURLConnection) urlObj.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(TIMEOUT_MS);
+                conn.setReadTimeout(TIMEOUT_MS);
+                conn.setRequestProperty("User-Agent", "StatusMonitor/1.0");
+                conn.setInstanceFollowRedirects(true);
 
-            int code = conn.getResponseCode();
-            
-            if (code >= 200 && code < 300) {
-                String body = readBody(conn);
-                if (body != null && body.toLowerCase().contains(expectedContent)) {
-                    String title = extractTitle(body);
-                    return Result.online(title != null ? title : "OK");
+                int code = conn.getResponseCode();
+
+                if (code >= 200 && code < 300) {
+                    String body = readBody(conn);
+                    if (body != null && body.toLowerCase().contains(expectedContent)) {
+                        String title = extractTitle(body);
+                        return Result.online(title != null ? title : "OK");
+                    } else {
+                        return Result.offline("Content not found");
+                    }
+                } else if (code >= 300 && code < 400) {
+                    return Result.offline("Redirect " + code);
                 } else {
-                    return Result.offline("Content not found");
+                    return Result.offline("HTTP " + code);
                 }
-            } else if (code >= 300 && code < 400) {
-                return Result.offline("Redirect " + code);
-            } else {
-                return Result.offline("HTTP " + code);
-            }
 
-        } catch (java.net.UnknownHostException e) {
-            return Result.noConnection("No DNS");
-        } catch (java.net.SocketTimeoutException e) {
-            return Result.offline("Timeout");
-        } catch (java.net.NoRouteToHostException e) {
-            return Result.noConnection("No route");
-        } catch (java.net.ConnectException e) {
-            return Result.offline("Connection refused");
-        } catch (javax.net.ssl.SSLException e) {
-            return Result.offline("SSL error");
-        } catch (Exception e) {
-            return Result.offline(e.getClass().getSimpleName());
-        } finally {
-            if (conn != null) conn.disconnect();
+            } catch (java.net.UnknownHostException e) {
+                return Result.noConnection("No DNS");
+            } catch (java.net.SocketTimeoutException e) {
+                if (attempt == 1) return Result.offline("Timeout");
+            } catch (java.net.NoRouteToHostException e) {
+                return Result.noConnection("No route");
+            } catch (java.net.ConnectException e) {
+                return Result.offline("Connection refused");
+            } catch (javax.net.ssl.SSLException e) {
+                return Result.offline("SSL error");
+            } catch (Exception e) {
+                return Result.offline(e.getClass().getSimpleName());
+            } finally {
+                if (conn != null) conn.disconnect();
+            }
         }
+        return Result.offline("Timeout");
     }
 
     @Override

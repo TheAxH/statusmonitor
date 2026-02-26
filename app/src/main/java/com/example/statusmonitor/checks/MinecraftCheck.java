@@ -20,7 +20,7 @@ Usage:
 */
 public class MinecraftCheck implements StatusCheckStrategy {
 
-    private static final int TIMEOUT_MS = 5000;
+    private static final int TIMEOUT_MS = 10000;
     private static final int DEFAULT_PORT = 25565;
 
     private final String host;
@@ -37,53 +37,48 @@ public class MinecraftCheck implements StatusCheckStrategy {
 
     @Override
     public Result check(MonitorEntity entity) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(host, port), TIMEOUT_MS);
-            socket.setSoTimeout(TIMEOUT_MS);
+        for (int attempt = 0; attempt < 2; attempt++) {
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(host, port), TIMEOUT_MS);
+                socket.setSoTimeout(TIMEOUT_MS);
 
-            DataInputStream in = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                DataInputStream in = new DataInputStream(socket.getInputStream());
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            // Send handshake
-            sendHandshake(out, host, port);
-            
-            // Send status request
-            sendStatusRequest(out);
-            
-            // Read response
-            String json = readStatusResponse(in);
-            
-            if (json == null) {
-                return Result.offline("No response");
+                sendHandshake(out, host, port);
+                sendStatusRequest(out);
+                String json = readStatusResponse(in);
+
+                if (json == null) {
+                    return Result.offline("No response");
+                }
+
+                String version = extractJson(json, "name");
+                String onlinePlayers = extractJson(json, "online");
+                String maxPlayers = extractJson(json, "max");
+
+                StringBuilder message = new StringBuilder();
+                if (version != null) message.append(version);
+                if (onlinePlayers != null && maxPlayers != null) {
+                    if (message.length() > 0) message.append("\n");
+                    message.append(onlinePlayers).append("/").append(maxPlayers).append(" players");
+                }
+
+                return Result.online(message.length() > 0 ? message.toString() : "Online");
+
+            } catch (java.net.UnknownHostException e) {
+                return Result.noConnection("No DNS");
+            } catch (java.net.SocketTimeoutException e) {
+                if (attempt == 1) return Result.offline("Timeout");
+            } catch (java.net.NoRouteToHostException e) {
+                return Result.noConnection("No route");
+            } catch (java.net.ConnectException e) {
+                return Result.offline("Connection refused");
+            } catch (Exception e) {
+                return Result.offline(e.getClass().getSimpleName());
             }
-
-            // Parse the JSON response
-            String version = extractJson(json, "name");
-            String onlinePlayers = extractJson(json, "online");
-            String maxPlayers = extractJson(json, "max");
-
-            StringBuilder message = new StringBuilder();
-            if (version != null) {
-                message.append(version);
-            }
-            if (onlinePlayers != null && maxPlayers != null) {
-                if (message.length() > 0) message.append("\n");
-                message.append(onlinePlayers).append("/").append(maxPlayers).append(" players");
-            }
-
-            return Result.online(message.length() > 0 ? message.toString() : "Online");
-
-        } catch (java.net.UnknownHostException e) {
-            return Result.noConnection("No DNS");
-        } catch (java.net.SocketTimeoutException e) {
-            return Result.offline("Timeout");
-        } catch (java.net.NoRouteToHostException e) {
-            return Result.noConnection("No route");
-        } catch (java.net.ConnectException e) {
-            return Result.offline("Connection refused");
-        } catch (Exception e) {
-            return Result.offline(e.getClass().getSimpleName());
         }
+        return Result.offline("Timeout");
     }
 
     @Override
